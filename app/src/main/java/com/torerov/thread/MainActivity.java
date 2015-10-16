@@ -19,7 +19,7 @@ import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
-    TextView messageView;
+    TextView messageView,counterView;;
     ProgressBar progressDownload;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,7 +79,42 @@ public class MainActivity extends AppCompatActivity {
                 task.execute();
             }
         });
+
+        counterView = (TextView)findViewById(R.id.text_counter);
+        btn = (Button)findViewById(R.id.btn_counter);
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startTime = NOT_START;
+                mHandler.post(downRunnable);
+            }
+        });
     }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mHandler.removeCallbacks(downRunnable);
+    }
+
+    public static final long NOT_START = -1;
+    long startTime = NOT_START;
+    Runnable downRunnable = new Runnable() {
+        @Override
+        public void run() {
+            long currentTime = System.currentTimeMillis();
+            if (startTime == NOT_START) {
+                startTime = currentTime;
+            }
+            int interval = (int)(currentTime - startTime);
+            int count = interval / 1000;
+            int rest = interval % 1000;
+            int next = 1000 - rest;
+
+            counterView.setText("count : " + count);
+            mHandler.postDelayed(this, next);
+        }
+    };
+
 
     class MyTask extends AsyncTask<String, Integer, Boolean>{
 
@@ -121,19 +156,19 @@ public class MainActivity extends AppCompatActivity {
     private boolean isBackPressed = false;
 
     Handler mHandler = new Handler(Looper.getMainLooper()){
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            switch(msg.what){
-                case MESSAGE_PROGRESS:
-                    int progress = msg.arg1;
-                    messageView.setText("progress : " + progress);
-                    progressDownload.setProgress(progress);
-                    break;
-                case MESSAGE_DONE :
-                    messageView.setText("progress done");
-                    break;
-                case MESSAGE_BACK_TIMEOUT :
+                    @Override
+                    public void handleMessage(Message msg) {
+                        super.handleMessage(msg);
+                        switch(msg.what){
+                            case MESSAGE_PROGRESS:
+                                int progress = msg.arg1;
+                                messageView.setText("progress : " + progress);
+                                progressDownload.setProgress(progress);
+                                break;
+                            case MESSAGE_DONE :
+                                messageView.setText("progress done");
+                                break;
+                            case MESSAGE_BACK_TIMEOUT :
                     isBackPressed = false;
                     break;
             }
